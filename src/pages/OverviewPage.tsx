@@ -5,6 +5,7 @@ import { SummaryCards } from "../components/SummaryCards";
 import { LeaderboardTable } from "../components/LeaderboardTable";
 import { Badge } from "../components/Badge";
 import { formatNumber } from "../lib/formatting";
+import { meanSkipNaN } from "../lib/aggregation";
 
 function barOption(title: string, rows: JsonRow[], labelKey: string, valueKey: string): EChartsOption {
   const data = rows
@@ -31,7 +32,34 @@ function pieOption(title: string, values: Array<{ name: string; value: number }>
 export function OverviewPage({ data }: { data: DashboardData }) {
   const bestFeature = data.crossMetricFeature[0];
   const bestPathology = data.crossMetricFeature.find((row) => row.entity_id !== "HVG");
-  const bestMethod = data.crossMetricMethodCluster[0];
+  const methodWinRows = data.manifest.method_clusters
+    .map((method_cluster) => {
+      const wins = data.leaderboardMethodCluster
+        .filter((row) => row.method_cluster === method_cluster)
+        .reduce((sum, row) => sum + (typeof row.n_wins === "number" ? row.n_wins : 0), 0);
+      return { method_cluster, wins };
+    })
+    .sort((a, b) => b.wins - a.wins || a.method_cluster.localeCompare(b.method_cluster));
+  const bestMethodByWins = methodWinRows[0];
+  const methodMeanValues = data.crossMetricMethodCluster.map((row) =>
+    typeof row.overall_mean_rank_score === "number" ? row.overall_mean_rank_score : null,
+  );
+  const methodMeanTie =
+    new Set(methodMeanValues.filter((value): value is number => typeof value === "number").map((value) => value.toFixed(8))).size === 1;
+  const bestDatasetMethod = data.manifest.method_clusters
+    .map((method_cluster) => {
+      const values = data.metricsLong
+        .filter(
+          (row) =>
+            row.method_cluster === method_cluster &&
+            ((row.dataset_type === "DLPFC" && row.metric_id === "ARI_gt") ||
+              (row.dataset_type === "non_DLPFC" && row.metric_id === "ARI_hvg")),
+        )
+        .map((row) => row.dataset_rank_score);
+      return { method_cluster, score: meanSkipNaN(values) };
+    })
+    .filter((row): row is { method_cluster: string; score: number } => typeof row.score === "number")
+    .sort((a, b) => b.score - a.score || a.method_cluster.localeCompare(b.method_cluster))[0];
   const bestPipeline = data.crossMetricPipeline[0];
   const bestCcst = data.leaderboardCcstLeidenFeature[0];
   const dlpfcBest = data.datasetSummary.find((row) => row.dataset_type === "DLPFC")?.best_feature;
@@ -53,11 +81,20 @@ export function OverviewPage({ data }: { data: DashboardData }) {
       description: "HVG excluded from feature-level global summary",
     },
     {
-      category: "Best method + cluster",
-      winner: String(bestMethod?.entity_id ?? "NA"),
+      category: "Best method + cluster by global wins",
+      winner: String(bestMethodByWins?.method_cluster ?? "NA"),
       metric: "All metrics",
-      score: bestMethod?.overall_mean_rank_score ?? null,
-      description: "Method-cluster summary over normalized global rank scores",
+      score: bestMethodByWins?.wins ?? null,
+      description: methodMeanTie
+        ? "Mean global rank scores are tied across method clusters; winner shown by total n_wins"
+        : "Winner selected by total n_wins from global rank score leaderboards",
+    },
+    {
+      category: "Best dataset-level method + cluster",
+      winner: String(bestDatasetMethod?.method_cluster ?? "NA"),
+      metric: "Main metric only",
+      score: bestDatasetMethod?.score ?? null,
+      description: "Uses dataset_rank_score from raw metrics: DLPFC uses ARI_gt, non-DLPFC uses ARI_hvg",
     },
     {
       category: "Best full pipeline",
@@ -112,7 +149,8 @@ export function OverviewPage({ data }: { data: DashboardData }) {
           { label: "Spatial label files", value: data.manifest.n_spatial_label_files },
           { label: "Best feature", value: String(bestFeature?.entity_id ?? "NA") },
           { label: "Best pathology feature", value: String(bestPathology?.entity_id ?? "NA") },
-          { label: "Best method", value: String(bestMethod?.entity_id ?? "NA") },
+          { label: "Best method wins", value: String(bestMethodByWins?.method_cluster ?? "NA"), detail: `${bestMethodByWins?.wins ?? 0} global wins` },
+          { label: "Best dataset method", value: String(bestDatasetMethod?.method_cluster ?? "NA"), detail: "Main metric only" },
           { label: "Best pipeline", value: <span className="text-base">{String(bestPipeline?.entity_id ?? "NA")}</span> },
         ]}
       />
