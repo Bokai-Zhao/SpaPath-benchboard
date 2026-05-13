@@ -68,6 +68,8 @@ The static site is emitted to `dist/`.
 
 Commit `public/data/` after running preprocessing, then push to `main`. The workflow at `.github/workflows/deploy.yml` installs dependencies, runs `npm run build`, and deploys `dist/` to GitHub Pages. It does not access local Windows paths or `/mnt/nas`.
 
+In the GitHub repository settings, open **Settings > Pages** and set **Build and deployment > Source** to **GitHub Actions**. If `https://sijimochou.github.io/` still returns an HTML file that points to `/src/main.tsx`, GitHub Pages is publishing `main/root` directly instead of the built `dist/` artifact.
+
 For a repository path that needs an explicit base, build with:
 
 ```bash

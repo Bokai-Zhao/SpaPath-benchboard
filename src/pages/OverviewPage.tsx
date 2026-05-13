@@ -154,10 +154,25 @@ export function OverviewPage({ data }: { data: DashboardData }) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
-          <ReactECharts option={barOption("Top 10 features", data.crossMetricFeature, "entity_id", "overall_mean_rank_score")} style={{ height: 360 }} />
+          <ReactECharts
+            option={barOption("Exploratory cross-metric feature aggregate", data.crossMetricFeature, "entity_id", "overall_mean_rank_score")}
+            style={{ height: 360 }}
+          />
+          <p className="px-2 pb-2 text-xs text-slate-500">Paper-specific winners are reported in the Champion Board above.</p>
         </div>
         <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
-          <ReactECharts option={barOption("Top 10 method clusters", data.crossMetricMethodCluster, "entity_id", "overall_mean_rank_score")} style={{ height: 360 }} />
+          <ReactECharts
+            option={barOption(
+              methodMeanTie ? "Method clusters: tied cross-feature mean" : "Exploratory method-cluster aggregate",
+              data.crossMetricMethodCluster,
+              "entity_id",
+              "overall_mean_rank_score",
+            )}
+            style={{ height: 360 }}
+          />
+          {methodMeanTie ? (
+            <p className="px-2 pb-2 text-xs text-slate-500">All method-cluster means are tied here; the manuscript conclusion remains CCST+Leiden.</p>
+          ) : null}
         </div>
         <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
           <ReactECharts
