@@ -148,6 +148,20 @@ def first_best_row(group: pd.DataFrame, score_col: str) -> pd.Series | None:
     return valid.loc[valid[score_col].idxmax()]
 
 
+def tied_best_value(group: pd.DataFrame, score_col: str, value_col: str, plural_label: str) -> Any:
+    valid = group[pd.notna(group[score_col])]
+    if valid.empty or value_col not in valid.columns:
+        return None
+    max_score = valid[score_col].max()
+    tied = valid[valid[score_col].eq(max_score)]
+    values = sorted(tied[value_col].dropna().astype(str).unique().tolist())
+    if not values:
+        return None
+    if len(values) == 1:
+        return values[0]
+    return f"Tie: {len(values)} {plural_label}"
+
+
 def sorted_records(df: pd.DataFrame, sort_cols: list[str]) -> list[dict[str, Any]]:
     if df.empty:
         return []
@@ -260,7 +274,6 @@ def build_feature_leaderboard(long_df: pd.DataFrame) -> list[dict[str, Any]]:
     for (metric_id, feature), group in long_df.groupby(["metric_id", "feature"], dropna=False):
         score = aggregate_values(group["global_rank_score"])
         norm = aggregate_values(group["normalized_global_rank_score"])
-        best = first_best_row(group, "global_rank_score")
         records.append(
             {
                 "metric_id": metric_id,
@@ -279,11 +292,11 @@ def build_feature_leaderboard(long_df: pd.DataFrame) -> list[dict[str, Any]]:
                 "n_method_clusters": int(group["method_cluster"].nunique(dropna=True)),
                 "n_seeds": int(group["seed_label"].nunique(dropna=True)),
                 "n_wins": wins.get((metric_id, feature), 0),
-                "best_context_key": None if best is None else best["context_key"],
-                "best_method_cluster": None if best is None else best["method_cluster"],
-                "best_spatial_method": None if best is None else best["spatial_method"],
-                "best_cluster_method": None if best is None else best["cluster_method"],
-                "best_seed_label": None if best is None else best["seed_label"],
+                "best_context_key": tied_best_value(group, "global_rank_score", "context_key", "contexts"),
+                "best_method_cluster": tied_best_value(group, "global_rank_score", "method_cluster", "methods"),
+                "best_spatial_method": tied_best_value(group, "global_rank_score", "spatial_method", "spatial methods"),
+                "best_cluster_method": tied_best_value(group, "global_rank_score", "cluster_method", "cluster methods"),
+                "best_seed_label": tied_best_value(group, "global_rank_score", "seed_label", "seeds"),
             }
         )
     return pd.DataFrame(records).sort_values(
@@ -300,7 +313,6 @@ def build_method_cluster_leaderboard(long_df: pd.DataFrame) -> list[dict[str, An
     ):
         score = aggregate_values(group["global_rank_score"])
         norm = aggregate_values(group["normalized_global_rank_score"])
-        best = first_best_row(group, "global_rank_score")
         method_cluster = group["method_cluster"].iloc[0]
         records.append(
             {
@@ -319,9 +331,9 @@ def build_method_cluster_leaderboard(long_df: pd.DataFrame) -> list[dict[str, An
                 "n_features": int(group["feature"].nunique(dropna=True)),
                 "n_seeds": int(group["seed_label"].nunique(dropna=True)),
                 "n_wins": wins.get((metric_id, method_cluster), 0),
-                "best_feature": None if best is None else best["feature"],
-                "best_context_key": None if best is None else best["context_key"],
-                "best_seed_label": None if best is None else best["seed_label"],
+                "best_feature": tied_best_value(group, "global_rank_score", "feature", "features"),
+                "best_context_key": tied_best_value(group, "global_rank_score", "context_key", "contexts"),
+                "best_seed_label": tied_best_value(group, "global_rank_score", "seed_label", "seeds"),
             }
         )
     return pd.DataFrame(records).sort_values(
@@ -338,7 +350,6 @@ def build_pipeline_leaderboard(long_df: pd.DataFrame) -> list[dict[str, Any]]:
         metric_id, feature, spatial_method, cluster_method = key
         score = aggregate_values(group["global_rank_score"])
         norm = aggregate_values(group["normalized_global_rank_score"])
-        best = first_best_row(group, "global_rank_score")
         worst = None
         valid = group.dropna(subset=["global_rank_score"])
         if not valid.empty:
@@ -364,7 +375,7 @@ def build_pipeline_leaderboard(long_df: pd.DataFrame) -> list[dict[str, Any]]:
                 "n_valid": score["n_valid"],
                 "n_seeds": int(group["seed_label"].nunique(dropna=True)),
                 "n_wins": wins.get((metric_id, pipeline_id), 0),
-                "best_seed_label": None if best is None else best["seed_label"],
+                "best_seed_label": tied_best_value(group, "global_rank_score", "seed_label", "seeds"),
                 "worst_seed_label": None if worst is None else worst["seed_label"],
             }
         )

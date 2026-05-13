@@ -29,10 +29,10 @@ function filterRows(rows: JsonRow[], filters: FilterState): JsonRow[] {
 }
 
 const commonScoreColumns: Array<SimpleColumn<JsonRow>> = [
-  { key: "mean_global_rank_score", header: "Mean", render: (row) => formatNumber(row.mean_global_rank_score) },
-  { key: "median_global_rank_score", header: "Median", render: (row) => formatNumber(row.median_global_rank_score) },
+  { key: "mean_global_rank_score", header: "Mean rank score", render: (row) => formatNumber(row.mean_global_rank_score) },
+  { key: "median_global_rank_score", header: "Median score", render: (row) => formatNumber(row.median_global_rank_score) },
   { key: "std_global_rank_score", header: "Std", render: (row) => formatNumber(row.std_global_rank_score) },
-  { key: "mean_normalized_global_rank_score", header: "Norm mean", render: (row) => formatNumber(row.mean_normalized_global_rank_score) },
+  { key: "mean_normalized_global_rank_score", header: "Norm mean score", render: (row) => formatNumber(row.mean_normalized_global_rank_score) },
   { key: "n_wins", header: "Wins" },
 ];
 
@@ -118,6 +118,11 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
         <p className="mt-1 text-sm text-slate-600">All global tables use `rank_scores_merged.parquet` derivatives only.</p>
       </div>
       <FilterPanel filters={filters} manifest={data.manifest} onChange={setFilters} />
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+        Rank score is a higher-is-better score from <code>rank_scores_merged.parquet</code>, not an ordinal rank number. For
+        example, an ARI_gt feature score of 19 means the top global rank score among 20 feature baselines. The HVG row is the
+        transcriptomic baseline evaluated against DLPFC ground truth, not the ARI_hvg reference setting.
+      </div>
       <div className="flex flex-wrap gap-2">
         {tabs.map((tab) => (
           <button
