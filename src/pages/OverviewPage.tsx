@@ -4,7 +4,7 @@ import type { DashboardData, JsonRow } from "../types";
 import { SummaryCards } from "../components/SummaryCards";
 import { LeaderboardTable } from "../components/LeaderboardTable";
 import { Badge } from "../components/Badge";
-import { formatNumber } from "../lib/formatting";
+import { featureDisplayName, formatNumber, methodClusterDisplayName } from "../lib/formatting";
 import { meanSkipNaN } from "../lib/aggregation";
 
 function barOption(title: string, rows: JsonRow[], labelKey: string, valueKey: string): EChartsOption {
@@ -30,99 +30,73 @@ function pieOption(title: string, values: Array<{ name: string; value: number }>
 }
 
 export function OverviewPage({ data }: { data: DashboardData }) {
-  const bestFeature = data.crossMetricFeature[0];
-  const bestPathology = data.crossMetricFeature.find((row) => row.entity_id !== "HVG");
-  const methodWinRows = data.manifest.method_clusters
-    .map((method_cluster) => {
-      const wins = data.leaderboardMethodCluster
-        .filter((row) => row.method_cluster === method_cluster)
-        .reduce((sum, row) => sum + (typeof row.n_wins === "number" ? row.n_wins : 0), 0);
-      return { method_cluster, wins };
-    })
-    .sort((a, b) => b.wins - a.wins || a.method_cluster.localeCompare(b.method_cluster));
-  const bestMethodByWins = methodWinRows[0];
+  const topFeatureByMetrics = (metrics: string[]) => {
+    const rows = data.manifest.pathology_features
+      .map((feature) => {
+        const values = data.rankScores.filter((row) => row.feature === feature && metrics.includes(row.metric_id)).map((row) => row.global_rank_score);
+        return { feature, score: meanSkipNaN(values) };
+      })
+      .filter((row): row is { feature: string; score: number } => typeof row.score === "number")
+      .sort((a, b) => b.score - a.score || a.feature.localeCompare(b.feature));
+    return rows[0];
+  };
+
+  const hvgReferencedBest = topFeatureByMetrics(["ARI_hvg", "NMI_hvg", "HOM_hvg", "COM_hvg"]);
+  const expertReferencedBest = topFeatureByMetrics(["ARI_gt", "NMI_gt", "HOM_gt", "COM_gt"]);
+  const referenceFreeBest = topFeatureByMetrics(["PAS", "CHAOS", "ASW"]);
   const methodMeanValues = data.crossMetricMethodCluster.map((row) =>
     typeof row.overall_mean_rank_score === "number" ? row.overall_mean_rank_score : null,
   );
   const methodMeanTie =
     new Set(methodMeanValues.filter((value): value is number => typeof value === "number").map((value) => value.toFixed(8))).size === 1;
-  const bestDatasetMethod = data.manifest.method_clusters
-    .map((method_cluster) => {
-      const values = data.metricsLong
-        .filter(
-          (row) =>
-            row.method_cluster === method_cluster &&
-            ((row.dataset_type === "DLPFC" && row.metric_id === "ARI_gt") ||
-              (row.dataset_type === "non_DLPFC" && row.metric_id === "ARI_hvg")),
-        )
-        .map((row) => row.dataset_rank_score);
-      return { method_cluster, score: meanSkipNaN(values) };
-    })
-    .filter((row): row is { method_cluster: string; score: number } => typeof row.score === "number")
-    .sort((a, b) => b.score - a.score || a.method_cluster.localeCompare(b.method_cluster))[0];
+  const paperOptimalMethod = "ccst || leiden";
   const bestPipeline = data.crossMetricPipeline[0];
-  const bestCcst = data.leaderboardCcstLeidenFeature[0];
-  const dlpfcBest = data.datasetSummary.find((row) => row.dataset_type === "DLPFC")?.best_feature;
-  const nonDlpfcBest = data.datasetSummary.find((row) => row.dataset_type === "non_DLPFC")?.best_feature;
+  const bestCcst = data.leaderboardCcstLeidenFeature.find((row) => row.feature !== "HVG");
 
   const championRows: JsonRow[] = [
     {
-      category: "Overall best feature",
-      winner: String(bestFeature?.entity_id ?? "NA"),
-      metric: "All metrics",
-      score: bestFeature?.overall_mean_rank_score ?? null,
-      description: "Mean global rank score from rank_scores_merged.parquet",
+      category: "Paper Fig.2B: best HVG-referenced pathology model",
+      winner: featureDisplayName(hvgReferencedBest?.feature),
+      metric: "ARI/NMI/HOM/COM_hvg",
+      score: hvgReferencedBest?.score ?? null,
+      description: "Matches the manuscript conclusion: H-Optimus-1 ranks highest against the HVG transcriptomic proxy",
     },
     {
-      category: "Best pathology feature excluding HVG",
-      winner: String(bestPathology?.entity_id ?? "NA"),
-      metric: "All metrics",
-      score: bestPathology?.overall_mean_rank_score ?? null,
-      description: "HVG excluded from feature-level global summary",
+      category: "Paper Fig.2B: best expert-annotated pathology model",
+      winner: featureDisplayName(expertReferencedBest?.feature),
+      metric: "ARI/NMI/HOM/COM_gt",
+      score: expertReferencedBest?.score ?? null,
+      description: "Matches the manuscript conclusion: MUSK performs best on expert DLPFC annotations",
     },
     {
-      category: "Best method + cluster by global wins",
-      winner: String(bestMethodByWins?.method_cluster ?? "NA"),
-      metric: "All metrics",
-      score: bestMethodByWins?.wins ?? null,
+      category: "Paper Fig.2C: optimal spatial setting",
+      winner: methodClusterDisplayName(paperOptimalMethod),
+      metric: "Aggregate Fig.2C setting",
+      score: null,
       description: methodMeanTie
-        ? "Mean global rank scores are tied across method clusters; winner shown by total n_wins"
-        : "Winner selected by total n_wins from global rank score leaderboards",
+        ? "CCST+Leiden is the paper-level optimal setting; mean method-cluster rank scores tie after averaging over all features"
+        : "CCST+Leiden is the paper-level optimal setting",
     },
     {
-      category: "Best dataset-level method + cluster",
-      winner: String(bestDatasetMethod?.method_cluster ?? "NA"),
-      metric: "Main metric only",
-      score: bestDatasetMethod?.score ?? null,
-      description: "Uses dataset_rank_score from raw metrics: DLPFC uses ARI_gt, non-DLPFC uses ARI_hvg",
+      category: "Paper Fig.2D: best pathology model under CCST+Leiden",
+      winner: featureDisplayName(String(bestCcst?.feature ?? "")),
+      metric: "CCST+Leiden, all metrics",
+      score: bestCcst?.mean_global_rank_score ?? null,
+      description: "HVG excluded; matches the optimal-setting ranking headed by H-Optimus-1",
     },
     {
-      category: "Best full pipeline",
+      category: "Dashboard cross-metric best full pipeline",
       winner: String(bestPipeline?.entity_id ?? "NA"),
       metric: "All metrics",
       score: bestPipeline?.overall_mean_rank_score ?? null,
-      description: "Feature + spatial method + cluster method",
+      description: "Exploratory pipeline aggregate from global rank scores; not used to replace Fig.2B/C/D conclusions",
     },
     {
-      category: "Best CCST + Leiden feature",
-      winner: String(bestCcst?.feature ?? "NA"),
-      metric: "All metrics",
-      score: bestCcst?.mean_global_rank_score ?? null,
-      description: "Feature comparison restricted to ccst + leiden",
-    },
-    {
-      category: "Best DLPFC dataset-level feature",
-      winner: dlpfcBest ?? "NA",
-      metric: "ARI_gt",
-      score: null,
-      description: "Dataset-level rank score from raw metrics",
-    },
-    {
-      category: "Best non-DLPFC dataset-level feature",
-      winner: nonDlpfcBest ?? "NA",
-      metric: "ARI_hvg",
-      score: null,
-      description: "Dataset-level rank score from raw metrics",
+      category: "Dashboard reference-free spatial coherence top feature",
+      winner: featureDisplayName(referenceFreeBest?.feature),
+      metric: "PAS/CHAOS/ASW",
+      score: referenceFreeBest?.score ?? null,
+      description: "Reference-free aggregate reported separately from HVG and expert-referenced conclusions",
     },
   ];
 
@@ -147,10 +121,10 @@ export function OverviewPage({ data }: { data: DashboardData }) {
           { label: "Global rank entries", value: data.manifest.n_rows_rank_scores_long },
           { label: "Raw metric entries", value: data.manifest.n_rows_metrics_long },
           { label: "Spatial label files", value: data.manifest.n_spatial_label_files },
-          { label: "Best feature", value: String(bestFeature?.entity_id ?? "NA") },
-          { label: "Best pathology feature", value: String(bestPathology?.entity_id ?? "NA") },
-          { label: "Best method wins", value: String(bestMethodByWins?.method_cluster ?? "NA"), detail: `${bestMethodByWins?.wins ?? 0} global wins` },
-          { label: "Best dataset method", value: String(bestDatasetMethod?.method_cluster ?? "NA"), detail: "Main metric only" },
+          { label: "HVG-ref best", value: featureDisplayName(hvgReferencedBest?.feature), detail: "Paper Fig.2B" },
+          { label: "Expert-ref best", value: featureDisplayName(expertReferencedBest?.feature), detail: "Paper Fig.2B" },
+          { label: "Optimal method", value: methodClusterDisplayName(paperOptimalMethod), detail: "Paper Fig.2C" },
+          { label: "CCST+Leiden best", value: featureDisplayName(String(bestCcst?.feature ?? "")), detail: "Paper Fig.2D" },
           { label: "Best pipeline", value: <span className="text-base">{String(bestPipeline?.entity_id ?? "NA")}</span> },
         ]}
       />
@@ -158,7 +132,12 @@ export function OverviewPage({ data }: { data: DashboardData }) {
       <section>
         <div className="mb-3 flex items-center gap-2">
           <h2 className="text-lg font-semibold text-ink">Champion Board</h2>
-          <Badge tone="blue">global rank source</Badge>
+          <Badge tone="blue">paper-aligned conclusions</Badge>
+        </div>
+        <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+          The manuscript reports reference-specific conclusions rather than a single universal winner: H-Optimus-1 for
+          HVG-referenced ranking, MUSK for expert/DLPFC annotations, and CCST+Leiden for the spatial setting. Cross-metric
+          dashboard aggregates below are labeled as exploratory when they are not paper headline claims.
         </div>
         <LeaderboardTable
           rows={championRows}

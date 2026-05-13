@@ -21,6 +21,16 @@ export function MethodologyPage() {
         <code>pfmc_metrics_11.parquet</code>. PAS and CHAOS are lower-is-better; ASW, ARI, NMI, HOM, and COM are higher-is-better.
         Ties use average rank, and missing values are skipped.
       </p>
+      <h2>Paper-Aligned Headline Findings</h2>
+      <p>
+        The dashboard follows the manuscript conclusions: H-Optimus-1 is the top pathology model under the HVG-referenced
+        transcriptomic proxy, MUSK is the top pathology model under expert DLPFC annotations, and CCST + Leiden is treated as
+        the optimal spatial representation and clustering setting for Fig.2C/Fig.2D-style views.
+      </p>
+      <p>
+        Some exploratory dashboard aggregates average across metric families that the paper reports separately. Those views are
+        useful for browsing but should not be read as replacing the reference-specific conclusions above.
+      </p>
       <h2>References</h2>
       <p>
         DLPFC datasets use ground truth layer labels for GT-referenced metrics such as ARI_gt and NMI_gt. Non-DLPFC datasets

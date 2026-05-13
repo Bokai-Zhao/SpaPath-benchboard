@@ -58,8 +58,15 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
       };
     }
     if (activeTab === "method") {
+      const methodRows = filterRows(data.leaderboardMethodCluster, { ...filters, topN: Number.MAX_SAFE_INTEGER })
+        .sort((a, b) => {
+          const winDelta = (typeof b.n_wins === "number" ? b.n_wins : 0) - (typeof a.n_wins === "number" ? a.n_wins : 0);
+          if (winDelta !== 0) return winDelta;
+          return String(a.method_cluster).localeCompare(String(b.method_cluster));
+        })
+        .slice(0, filters.topN);
       return {
-        rows: filterRows(data.leaderboardMethodCluster, filters),
+        rows: methodRows,
         columns: [
           { key: "metric_id", header: "Metric" },
           { key: "method_cluster", header: "Method cluster" },
@@ -122,6 +129,12 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
           </button>
         ))}
       </div>
+      {activeTab === "method" ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          Method-cluster mean global rank scores are tied after averaging across all features in this table. The paper-level
+          Fig.2C conclusion remains CCST + Leiden as the optimal spatial setting; this exploratory table is sorted by n_wins.
+        </div>
+      ) : null}
       <LeaderboardTable rows={rows} columns={columns} filename={`${activeTab}-leaderboard.csv`} onRowClick={setDetail} />
       <DetailDrawer title="Leaderboard details" row={detail} onClose={() => setDetail(null)} />
     </div>
