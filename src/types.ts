@@ -17,7 +17,10 @@ export interface MetricInfo {
   metric_family: string;
   reference_type: ReferenceType;
   higher_is_better: boolean;
+  short_name: string;
+  display_name: string;
   description?: string;
+  main_for: Array<"all" | DatasetType>;
 }
 
 export interface RankScoreLongRow {

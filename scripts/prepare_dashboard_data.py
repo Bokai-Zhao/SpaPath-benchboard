@@ -15,20 +15,6 @@ import numpy as np
 import pandas as pd
 
 
-METRIC_ORDER = [
-    "PAS",
-    "CHAOS",
-    "ASW",
-    "ARI_hvg",
-    "NMI_hvg",
-    "HOM_hvg",
-    "COM_hvg",
-    "ARI_gt",
-    "NMI_gt",
-    "HOM_gt",
-    "COM_gt",
-]
-
 RANK_ID_COLUMNS = [
     "feature",
     "context_key",
@@ -38,44 +24,117 @@ RANK_ID_COLUMNS = [
     "random_seed",
 ]
 
-METRIC_DESCRIPTIONS = {
-    "PAS": "Reference-free spatial continuity metric; lower raw value is better.",
-    "CHAOS": "Reference-free spatial disorder metric; lower raw value is better.",
-    "ASW": "Average silhouette width; higher raw value is better.",
-    "ARI_hvg": "ARI against HVG pseudo-reference.",
-    "NMI_hvg": "NMI against HVG pseudo-reference.",
-    "HOM_hvg": "Homogeneity against HVG pseudo-reference.",
-    "COM_hvg": "Completeness against HVG pseudo-reference.",
-    "ARI_gt": "ARI against ground truth labels.",
-    "NMI_gt": "NMI against ground truth labels.",
-    "HOM_gt": "Homogeneity against ground truth labels.",
-    "COM_gt": "Completeness against ground truth labels.",
+METRIC_INFO = {
+    "PAS": {
+        "metric_family": "PAS",
+        "reference_type": "unsupervised",
+        "higher_is_better": False,
+        "short_name": "PAS",
+        "display_name": "Patch Adjacency Score",
+        "description": "Reference-free local spatial neighborhood consistency. Lower is better.",
+        "main_for": ["all"],
+    },
+    "CHAOS": {
+        "metric_family": "CHAOS",
+        "reference_type": "unsupervised",
+        "higher_is_better": False,
+        "short_name": "CHAOS",
+        "display_name": "CHAOS",
+        "description": "Reference-free spatial dispersion or spatial disorder of predicted domains. Lower is better.",
+        "main_for": ["all"],
+    },
+    "ASW": {
+        "metric_family": "ASW",
+        "reference_type": "unsupervised",
+        "higher_is_better": True,
+        "short_name": "ASW",
+        "display_name": "Average Silhouette Width",
+        "description": "Reference-free latent-space cluster separation. Higher is better.",
+        "main_for": ["all"],
+    },
+    "ARI_hvg": {
+        "metric_family": "ARI",
+        "reference_type": "hvg",
+        "higher_is_better": True,
+        "short_name": "ARI-HVG",
+        "display_name": "ARI against HVG pseudo-reference",
+        "description": "Adjusted Rand Index comparing predicted domains with HVG-derived pseudo-reference labels. Higher is better.",
+        "main_for": ["non_DLPFC"],
+    },
+    "NMI_hvg": {
+        "metric_family": "NMI",
+        "reference_type": "hvg",
+        "higher_is_better": True,
+        "short_name": "NMI-HVG",
+        "display_name": "NMI against HVG pseudo-reference",
+        "description": "Normalized Mutual Information comparing predicted domains with HVG-derived pseudo-reference labels. Higher is better.",
+        "main_for": ["non_DLPFC"],
+    },
+    "HOM_hvg": {
+        "metric_family": "HOM",
+        "reference_type": "hvg",
+        "higher_is_better": True,
+        "short_name": "HOM-HVG",
+        "display_name": "Homogeneity against HVG pseudo-reference",
+        "description": "Cluster purity relative to HVG-derived pseudo-reference labels. Higher is better.",
+        "main_for": ["non_DLPFC"],
+    },
+    "COM_hvg": {
+        "metric_family": "COM",
+        "reference_type": "hvg",
+        "higher_is_better": True,
+        "short_name": "COM-HVG",
+        "display_name": "Completeness against HVG pseudo-reference",
+        "description": "Completeness of recovering each HVG-derived pseudo-reference domain. Higher is better.",
+        "main_for": ["non_DLPFC"],
+    },
+    "ARI_gt": {
+        "metric_family": "ARI",
+        "reference_type": "gt",
+        "higher_is_better": True,
+        "short_name": "ARI-GT",
+        "display_name": "ARI against expert ground truth",
+        "description": "Adjusted Rand Index comparing predicted domains with expert annotations. Higher is better.",
+        "main_for": ["DLPFC"],
+    },
+    "NMI_gt": {
+        "metric_family": "NMI",
+        "reference_type": "gt",
+        "higher_is_better": True,
+        "short_name": "NMI-GT",
+        "display_name": "NMI against expert ground truth",
+        "description": "Normalized Mutual Information comparing predicted domains with expert annotations. Higher is better.",
+        "main_for": ["DLPFC"],
+    },
+    "HOM_gt": {
+        "metric_family": "HOM",
+        "reference_type": "gt",
+        "higher_is_better": True,
+        "short_name": "HOM-GT",
+        "display_name": "Homogeneity against expert ground truth",
+        "description": "Cluster purity relative to expert annotations. Higher is better.",
+        "main_for": ["DLPFC"],
+    },
+    "COM_gt": {
+        "metric_family": "COM",
+        "reference_type": "gt",
+        "higher_is_better": True,
+        "short_name": "COM-GT",
+        "display_name": "Completeness against expert ground truth",
+        "description": "Completeness of recovering each expert-annotated domain. Higher is better.",
+        "main_for": ["DLPFC"],
+    },
 }
+
+METRIC_ORDER = list(METRIC_INFO.keys())
 
 
 def log(message: str) -> None:
     print(f"[prepare-dashboard-data] {message}", flush=True)
 
 
-def metric_info(metric_id: str) -> dict[str, Any]:
-    if metric_id.endswith("_hvg"):
-        reference_type = "hvg"
-    elif metric_id.endswith("_gt"):
-        reference_type = "gt"
-    else:
-        reference_type = "unsupervised"
-
-    metric_family = metric_id.split("_", 1)[0] if "_" in metric_id else metric_id
-    return {
-        "metric_id": metric_id,
-        "metric_family": metric_family,
-        "reference_type": reference_type,
-        "higher_is_better": metric_id not in {"PAS", "CHAOS"},
-        "description": METRIC_DESCRIPTIONS.get(metric_id, ""),
-    }
-
-
-METRIC_INFO = {metric: metric_info(metric) for metric in METRIC_ORDER}
+def metric_record(metric_id: str) -> dict[str, Any]:
+    return {"metric_id": metric_id, **METRIC_INFO[metric_id]}
 
 
 def safe_name(value: Any) -> str:
@@ -277,6 +336,9 @@ def build_feature_leaderboard(long_df: pd.DataFrame) -> list[dict[str, Any]]:
         records.append(
             {
                 "metric_id": metric_id,
+                "metric_family": METRIC_INFO[metric_id]["metric_family"],
+                "reference_type": METRIC_INFO[metric_id]["reference_type"],
+                "higher_is_better": METRIC_INFO[metric_id]["higher_is_better"],
                 "feature": feature,
                 "is_hvg": bool(group["is_hvg"].iloc[0]),
                 "is_pathology_feature": bool(group["is_pathology_feature"].iloc[0]),
@@ -317,6 +379,9 @@ def build_method_cluster_leaderboard(long_df: pd.DataFrame) -> list[dict[str, An
         records.append(
             {
                 "metric_id": metric_id,
+                "metric_family": METRIC_INFO[metric_id]["metric_family"],
+                "reference_type": METRIC_INFO[metric_id]["reference_type"],
+                "higher_is_better": METRIC_INFO[metric_id]["higher_is_better"],
                 "spatial_method": spatial_method,
                 "cluster_method": cluster_method,
                 "method_cluster": method_cluster,
@@ -358,6 +423,9 @@ def build_pipeline_leaderboard(long_df: pd.DataFrame) -> list[dict[str, Any]]:
         records.append(
             {
                 "metric_id": metric_id,
+                "metric_family": METRIC_INFO[metric_id]["metric_family"],
+                "reference_type": METRIC_INFO[metric_id]["reference_type"],
+                "higher_is_better": METRIC_INFO[metric_id]["higher_is_better"],
                 "feature": feature,
                 "spatial_method": spatial_method,
                 "cluster_method": cluster_method,
@@ -669,7 +737,7 @@ def process_summaries(
             set(rank_long["method_cluster"].dropna().astype(str)) | set(metrics_long["method_cluster"].dropna().astype(str))
         ),
         "seed_labels": sorted(rank_long["seed_label"].dropna().astype(str).unique().tolist()),
-        "metrics": [METRIC_INFO[metric] for metric in METRIC_ORDER],
+        "metrics": [metric_record(metric) for metric in METRIC_ORDER],
         "notes": [
             "Global rank scores are loaded from rank_scores_merged.parquet.",
             "Raw metrics are loaded from pfmc_metrics_11.parquet.",
@@ -830,6 +898,7 @@ def build_metric_summary(
         pipeline_metric = pipeline_lb[pipeline_lb["metric_id"].eq(metric_id)] if not pipeline_lb.empty else pd.DataFrame()
         records.append(
             {
+                "metric_id": metric_id,
                 **info,
                 "n_valid_global_rank_scores": int(rank_metric["global_rank_score"].notna().sum()),
                 "n_valid_raw_values": int(raw_metric["raw_value"].notna().sum()),

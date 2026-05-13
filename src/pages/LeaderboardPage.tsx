@@ -22,6 +22,7 @@ function filterRows(rows: JsonRow[], filters: FilterState): JsonRow[] {
   return rows
     .filter((row) => {
       if (typeof row.metric_id === "string" && !metricMatches(row.metric_id, filters.selectedMetric)) return false;
+      if (filters.selectedReferenceType !== "all" && row.reference_type !== filters.selectedReferenceType) return false;
       if (!search) return true;
       return Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(search));
     })
@@ -47,6 +48,7 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
         rows: filterRows(data.leaderboardFeature, filters),
         columns: [
           { key: "metric_id", header: "Metric" },
+          { key: "reference_type", header: "Reference" },
           { key: "feature", header: "Feature" },
           { key: "is_hvg", header: "Group", render: (row: JsonRow) => <Badge tone={row.is_hvg ? "slate" : "blue"}>{row.is_hvg ? "HVG" : "pathology"}</Badge> },
           ...commonScoreColumns,
@@ -69,6 +71,7 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
         rows: methodRows,
         columns: [
           { key: "metric_id", header: "Metric" },
+          { key: "reference_type", header: "Reference" },
           { key: "method_cluster", header: "Method cluster" },
           { key: "spatial_method", header: "Spatial" },
           { key: "cluster_method", header: "Cluster" },
@@ -84,6 +87,7 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
         rows: filterRows(data.leaderboardPipeline, filters),
         columns: [
           { key: "metric_id", header: "Metric" },
+          { key: "reference_type", header: "Reference" },
           { key: "pipeline_id", header: "Pipeline" },
           { key: "feature", header: "Feature" },
           { key: "spatial_method", header: "Spatial" },
@@ -96,7 +100,7 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
       };
     }
     return {
-      rows: filterRows(data.leaderboardCcstLeidenFeature, { ...filters, selectedMetric: "All metrics" }),
+      rows: filterRows(data.leaderboardCcstLeidenFeature, { ...filters, selectedMetric: "All metrics", selectedReferenceType: "all" }),
       columns: [
         { key: "feature", header: "Feature" },
         { key: "is_hvg", header: "Group", render: (row: JsonRow) => <Badge tone={row.is_hvg ? "slate" : "blue"}>{row.is_hvg ? "HVG" : "pathology"}</Badge> },

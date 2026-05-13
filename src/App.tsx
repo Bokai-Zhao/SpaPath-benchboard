@@ -65,7 +65,7 @@ function App() {
       case "agreement":
         return <MetricAgreementPage data={data} />;
       case "methodology":
-        return <MethodologyPage />;
+        return <MethodologyPage data={data} />;
       default:
         return <OverviewPage data={data} />;
     }

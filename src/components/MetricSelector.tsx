@@ -17,7 +17,7 @@ export function MetricSelector({
         <option>Main metric only</option>
         {metrics.map((metric) => (
           <option key={metric.metric_id} value={metric.metric_id}>
-            {metric.metric_id}
+            {metric.short_name ?? metric.metric_id} - {metric.display_name ?? metric.metric_id}
           </option>
         ))}
       </select>

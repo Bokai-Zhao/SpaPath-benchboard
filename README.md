@@ -12,6 +12,17 @@ The preprocessing script reads exactly three parquet files:
 
 The frontend never reads parquet files directly.
 
+## Metric Semantics
+
+The dashboard uses exactly 11 precomputed raw metric columns: `PAS`, `CHAOS`, `ASW`, `ARI_hvg`, `NMI_hvg`, `HOM_hvg`, `COM_hvg`, `ARI_gt`, `NMI_gt`, `HOM_gt`, and `COM_gt`.
+
+- Reference-free metrics: `PAS`, `CHAOS`, `ASW`.
+- HVG-referenced metrics for transcriptomics pseudo-reference agreement: `*_hvg`.
+- Expert-referenced metrics for DLPFC ground-truth agreement: `*_gt`.
+- Lower is better only for `PAS` and `CHAOS`; all other metrics are higher-is-better.
+
+The metric metadata lives in `scripts/prepare_dashboard_data.py` and is emitted to `public/data/manifest.json`; frontend controls read that manifest instead of maintaining a second metric definition table.
+
 ## Global Rank Score vs Dataset Rank Score
 
 `global_rank_score` comes from `rank_scores_merged.parquet`. It is the benchmark-level ranking signal and is used for global leaderboards, cross-metric summaries, heatmaps, and comparisons.
