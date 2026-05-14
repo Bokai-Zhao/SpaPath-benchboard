@@ -5,7 +5,15 @@ import { LeaderboardTable, type SimpleColumn } from "../components/LeaderboardTa
 import { DetailDrawer } from "../components/DetailDrawer";
 import { Badge } from "../components/Badge";
 import { DEFAULT_FILTERS } from "../config";
-import { formatNumber } from "../lib/formatting";
+import {
+  clusterMethodDisplayName,
+  featureDisplayName,
+  featureSearchText,
+  formatNumber,
+  methodClusterDisplayName,
+  pipelineDisplayName,
+  spatialMethodDisplayName,
+} from "../lib/formatting";
 import { metricMatches } from "../lib/filters";
 
 type TabId = "feature" | "method" | "pipeline" | "ccst";
@@ -17,14 +25,25 @@ const tabs: Array<{ id: TabId; label: string }> = [
   { id: "ccst", label: "CCST + Leiden" },
 ];
 
-function filterRows(rows: JsonRow[], filters: FilterState): JsonRow[] {
+function filterRows(rows: JsonRow[], filters: FilterState, data: DashboardData): JsonRow[] {
   const search = filters.searchText.toLowerCase().trim();
   return rows
     .filter((row) => {
       if (typeof row.metric_id === "string" && !metricMatches(row.metric_id, filters.selectedMetric)) return false;
       if (filters.selectedReferenceType !== "all" && row.reference_type !== filters.selectedReferenceType) return false;
+      if (filters.selectedFeatures.length && typeof row.feature === "string" && !filters.selectedFeatures.includes(row.feature)) return false;
       if (!search) return true;
-      return Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(search));
+      const searchable = [
+        ...Object.values(row).map((value) => String(value ?? "")),
+        typeof row.feature === "string" ? featureSearchText(row.feature, data.featureMetadataByKey) : "",
+        typeof row.best_feature === "string" ? featureSearchText(row.best_feature, data.featureMetadataByKey) : "",
+        typeof row.pipeline_id === "string" ? pipelineDisplayName(row.pipeline_id, data.featureMetadataByKey) : "",
+        typeof row.method_cluster === "string" ? methodClusterDisplayName(row.method_cluster) : "",
+        typeof row.best_method_cluster === "string" ? methodClusterDisplayName(row.best_method_cluster) : "",
+        typeof row.spatial_method === "string" ? spatialMethodDisplayName(row.spatial_method) : "",
+        typeof row.cluster_method === "string" ? clusterMethodDisplayName(row.cluster_method) : "",
+      ];
+      return searchable.some((value) => value.toLowerCase().includes(search));
     })
     .slice(0, filters.topN);
 }
@@ -45,22 +64,22 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
   const { rows, columns } = useMemo(() => {
     if (activeTab === "feature") {
       return {
-        rows: filterRows(data.leaderboardFeature, filters),
+        rows: filterRows(data.leaderboardFeature, filters, data),
         columns: [
           { key: "metric_id", header: "Metric" },
           { key: "reference_type", header: "Reference" },
-          { key: "feature", header: "Feature" },
+          { key: "feature", header: "Feature", render: (row: JsonRow) => featureDisplayName(String(row.feature ?? ""), data.featureMetadataByKey) },
           { key: "is_hvg", header: "Group", render: (row: JsonRow) => <Badge tone={row.is_hvg ? "slate" : "blue"}>{row.is_hvg ? "HVG" : "pathology"}</Badge> },
           ...commonScoreColumns,
           { key: "n_contexts", header: "Contexts" },
           { key: "n_method_clusters", header: "Methods" },
-          { key: "best_method_cluster", header: "Best method" },
+          { key: "best_method_cluster", header: "Best method", render: (row: JsonRow) => methodClusterDisplayName(String(row.best_method_cluster ?? "")) },
           { key: "best_seed_label", header: "Best seed" },
         ] satisfies Array<SimpleColumn<JsonRow>>,
       };
     }
     if (activeTab === "method") {
-      const methodRows = filterRows(data.leaderboardMethodCluster, { ...filters, topN: Number.MAX_SAFE_INTEGER })
+      const methodRows = filterRows(data.leaderboardMethodCluster, { ...filters, topN: Number.MAX_SAFE_INTEGER }, data)
         .sort((a, b) => {
           const winDelta = (typeof b.n_wins === "number" ? b.n_wins : 0) - (typeof a.n_wins === "number" ? a.n_wins : 0);
           if (winDelta !== 0) return winDelta;
@@ -72,26 +91,26 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
         columns: [
           { key: "metric_id", header: "Metric" },
           { key: "reference_type", header: "Reference" },
-          { key: "method_cluster", header: "Method cluster" },
-          { key: "spatial_method", header: "Spatial" },
-          { key: "cluster_method", header: "Cluster" },
+          { key: "method_cluster", header: "Method cluster", render: (row: JsonRow) => methodClusterDisplayName(String(row.method_cluster ?? "")) },
+          { key: "spatial_method", header: "Spatial", render: (row: JsonRow) => spatialMethodDisplayName(String(row.spatial_method ?? "")) },
+          { key: "cluster_method", header: "Cluster", render: (row: JsonRow) => clusterMethodDisplayName(String(row.cluster_method ?? "")) },
           ...commonScoreColumns,
           { key: "n_features", header: "Features" },
-          { key: "best_feature", header: "Best feature" },
+          { key: "best_feature", header: "Best feature", render: (row: JsonRow) => featureDisplayName(String(row.best_feature ?? ""), data.featureMetadataByKey) },
           { key: "best_seed_label", header: "Best seed" },
         ] satisfies Array<SimpleColumn<JsonRow>>,
       };
     }
     if (activeTab === "pipeline") {
       return {
-        rows: filterRows(data.leaderboardPipeline, filters),
+        rows: filterRows(data.leaderboardPipeline, filters, data),
         columns: [
           { key: "metric_id", header: "Metric" },
           { key: "reference_type", header: "Reference" },
-          { key: "pipeline_id", header: "Pipeline" },
-          { key: "feature", header: "Feature" },
-          { key: "spatial_method", header: "Spatial" },
-          { key: "cluster_method", header: "Cluster" },
+          { key: "pipeline_id", header: "Pipeline", render: (row: JsonRow) => pipelineDisplayName(String(row.pipeline_id ?? ""), data.featureMetadataByKey) },
+          { key: "feature", header: "Feature", render: (row: JsonRow) => featureDisplayName(String(row.feature ?? ""), data.featureMetadataByKey) },
+          { key: "spatial_method", header: "Spatial", render: (row: JsonRow) => spatialMethodDisplayName(String(row.spatial_method ?? "")) },
+          { key: "cluster_method", header: "Cluster", render: (row: JsonRow) => clusterMethodDisplayName(String(row.cluster_method ?? "")) },
           ...commonScoreColumns,
           { key: "n_seeds", header: "Seeds" },
           { key: "best_seed_label", header: "Best seed" },
@@ -100,9 +119,9 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
       };
     }
     return {
-      rows: filterRows(data.leaderboardCcstLeidenFeature, { ...filters, selectedMetric: "All metrics", selectedReferenceType: "all" }),
+      rows: filterRows(data.leaderboardCcstLeidenFeature, { ...filters, selectedMetric: "All metrics", selectedReferenceType: "all" }, data),
       columns: [
-        { key: "feature", header: "Feature" },
+        { key: "feature", header: "Feature", render: (row: JsonRow) => featureDisplayName(String(row.feature ?? ""), data.featureMetadataByKey) },
         { key: "is_hvg", header: "Group", render: (row: JsonRow) => <Badge tone={row.is_hvg ? "slate" : "blue"}>{row.is_hvg ? "HVG" : "pathology"}</Badge> },
         { key: "mean_global_rank_score", header: "Mean", render: (row: JsonRow) => formatNumber(row.mean_global_rank_score) },
         { key: "rank_score_PAS", header: "PAS", render: (row: JsonRow) => formatNumber(row.rank_score_PAS) },
@@ -121,7 +140,7 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
         <h1 className="text-2xl font-semibold text-ink">Leaderboard</h1>
         <p className="mt-1 text-sm text-slate-600">All global tables use `rank_scores_merged.parquet` derivatives only.</p>
       </div>
-      <FilterPanel filters={filters} manifest={data.manifest} onChange={setFilters} />
+      <FilterPanel filters={filters} manifest={data.manifest} featureMetadataByKey={data.featureMetadataByKey} onChange={setFilters} />
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
         Rank score is a higher-is-better score from <code>rank_scores_merged.parquet</code>, not an ordinal rank number. For
         example, an ARI_gt feature score of 19 means the top global rank score among 20 feature baselines. The HVG row is the
@@ -145,7 +164,7 @@ export function LeaderboardPage({ data }: { data: DashboardData }) {
         </div>
       ) : null}
       <LeaderboardTable rows={rows} columns={columns} filename={`${activeTab}-leaderboard.csv`} onRowClick={setDetail} />
-      <DetailDrawer title="Leaderboard details" row={detail} onClose={() => setDetail(null)} />
+      <DetailDrawer title="Leaderboard details" row={detail} featureMetadataByKey={data.featureMetadataByKey} onClose={() => setDetail(null)} />
     </div>
   );
 }

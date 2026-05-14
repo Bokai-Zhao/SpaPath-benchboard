@@ -1,3 +1,5 @@
+import type { FeatureMetadata } from "../types";
+
 export function formatNumber(value: unknown, digits = 3): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return "NA";
   return value.toLocaleString(undefined, { maximumFractionDigits: digits });
@@ -19,7 +21,7 @@ export function asText(value: unknown): string {
   return String(value);
 }
 
-const FEATURE_DISPLAY_NAMES: Record<string, string> = {
+export const FEATURE_DISPLAY_NAMES: Record<string, string> = {
   hoptimus1: "H-Optimus-1",
   hoptimus0: "H-Optimus-0",
   uni_v1: "UNI",
@@ -34,7 +36,7 @@ const FEATURE_DISPLAY_NAMES: Record<string, string> = {
   phikon: "Phikon",
   hibou_l: "Hibou-L",
   hibou_b: "Hibou-B",
-  ctranspath: "CtransPath",
+  ctranspath: "CTransPath",
   omics_clip: "OmicsCLIP",
   vit_l_dinov3: "DINOv3-ViT-L",
   vit_b_dinov3: "DINOv3-ViT-B",
@@ -42,16 +44,74 @@ const FEATURE_DISPLAY_NAMES: Record<string, string> = {
   HVG: "HVG",
 };
 
-export function featureDisplayName(feature: string | null | undefined): string {
+export const DEFAULT_FEATURE_METADATA: FeatureMetadata[] = Object.entries(FEATURE_DISPLAY_NAMES).map(([feature, display_name]) => ({
+  feature,
+  display_name,
+  is_pathology_feature: feature !== "HVG",
+}));
+
+export const SPATIAL_METHOD_DISPLAY_NAMES: Record<string, string> = {
+  ccst: "CCST",
+  spagcn: "SpaGCN",
+  stagate: "STAGATE",
+  sedr: "SEDR",
+  graphst: "GraphST",
+  spaceflow: "SpaceFlow",
+  const: "Constant baseline",
+  PCA_32: "PCA-32",
+  PCA_64: "PCA-64",
+  PCA_128: "PCA-128",
+  PCA_256: "PCA-256",
+};
+
+export const CLUSTER_METHOD_DISPLAY_NAMES: Record<string, string> = {
+  kmeans: "K-means",
+  leiden: "Leiden",
+  louvain: "Louvain",
+};
+
+export function featureDisplayName(
+  feature: string | null | undefined,
+  metadataByKey?: Record<string, FeatureMetadata>,
+): string {
   if (!feature) return "NA";
-  return FEATURE_DISPLAY_NAMES[feature] ?? feature;
+  return metadataByKey?.[feature]?.display_name ?? FEATURE_DISPLAY_NAMES[feature] ?? feature;
+}
+
+export function spatialMethodDisplayName(method: string | null | undefined): string {
+  if (!method) return "NA";
+  return SPATIAL_METHOD_DISPLAY_NAMES[method] ?? titleCase(method);
+}
+
+export function clusterMethodDisplayName(cluster: string | null | undefined): string {
+  if (!cluster) return "NA";
+  return CLUSTER_METHOD_DISPLAY_NAMES[cluster] ?? titleCase(cluster);
 }
 
 export function methodClusterDisplayName(methodCluster: string | null | undefined): string {
   if (!methodCluster) return "NA";
-  return methodCluster
-    .replace("ccst", "CCST")
-    .replace("leiden", "Leiden")
-    .replace("louvain", "Louvain")
-    .replace("kmeans", "K-means");
+  const parts = methodCluster.split("||").map((part) => part.trim());
+  if (parts.length >= 2) return `${spatialMethodDisplayName(parts[0])} || ${clusterMethodDisplayName(parts[1])}`;
+  return spatialMethodDisplayName(methodCluster);
+}
+
+export function pipelineDisplayName(
+  pipelineId: string | null | undefined,
+  metadataByKey?: Record<string, FeatureMetadata>,
+): string {
+  if (!pipelineId) return "NA";
+  const parts = pipelineId.split("||").map((part) => part.trim());
+  if (parts.length >= 3) {
+    return `${featureDisplayName(parts[0], metadataByKey)} || ${spatialMethodDisplayName(parts[1])} || ${clusterMethodDisplayName(parts[2])}`;
+  }
+  return methodClusterDisplayName(pipelineId);
+}
+
+export function featureSearchText(feature: string | null | undefined, metadataByKey?: Record<string, FeatureMetadata>): string {
+  if (!feature) return "";
+  const metadata = metadataByKey?.[feature];
+  return [feature, metadata?.display_name, metadata?.paper_name, metadata?.formal_name, metadata?.group, metadata?.note]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
 }

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import type { DashboardData } from "../types";
 import { ComparePanel } from "../components/ComparePanel";
 import { SummaryCards } from "../components/SummaryCards";
-import { formatNumber } from "../lib/formatting";
+import { featureDisplayName, formatNumber } from "../lib/formatting";
 import { meanSkipNaN } from "../lib/aggregation";
 
 export function ComparePage({ data }: { data: DashboardData }) {
@@ -36,6 +36,8 @@ export function ComparePage({ data }: { data: DashboardData }) {
 
   const meanA = meanSkipNaN(data.rankScores.filter((row) => row.feature === a).map((row) => row.global_rank_score));
   const meanB = meanSkipNaN(data.rankScores.filter((row) => row.feature === b).map((row) => row.global_rank_score));
+  const displayA = featureDisplayName(a, data.featureMetadataByKey);
+  const displayB = featureDisplayName(b, data.featureMetadataByKey);
 
   return (
     <div className="space-y-5">
@@ -47,26 +49,26 @@ export function ComparePage({ data }: { data: DashboardData }) {
         <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
           Feature A
           <select className="rounded-md border border-line px-3 py-2 text-sm" value={a} onChange={(event) => setA(event.target.value)}>
-            {features.map((feature) => <option key={feature}>{feature}</option>)}
+            {features.map((feature) => <option key={feature} value={feature}>{featureDisplayName(feature, data.featureMetadataByKey)}</option>)}
           </select>
         </label>
         <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
           Feature B
           <select className="rounded-md border border-line px-3 py-2 text-sm" value={b} onChange={(event) => setB(event.target.value)}>
-            {features.map((feature) => <option key={feature}>{feature}</option>)}
+            {features.map((feature) => <option key={feature} value={feature}>{featureDisplayName(feature, data.featureMetadataByKey)}</option>)}
           </select>
         </label>
       </div>
       <SummaryCards
         cards={[
-          { label: `${a} global mean`, value: formatNumber(meanA) },
-          { label: `${b} global mean`, value: formatNumber(meanB) },
-          { label: `${a} dataset wins`, value: datasetWins.aWins },
-          { label: `${b} dataset wins`, value: datasetWins.bWins, detail: `${datasetWins.ties} ties` },
+          { label: `${displayA} global mean`, value: formatNumber(meanA) },
+          { label: `${displayB} global mean`, value: formatNumber(meanB) },
+          { label: `${displayA} dataset wins`, value: datasetWins.aWins },
+          { label: `${displayB} dataset wins`, value: datasetWins.bWins, detail: `${datasetWins.ties} ties` },
         ]}
       />
       <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
-        <ComparePanel title="Metric-wise global rank score" labels={metricCompare.labels} a={metricCompare.valuesA} b={metricCompare.valuesB} />
+        <ComparePanel title="Metric-wise global rank score" labels={metricCompare.labels} a={metricCompare.valuesA} b={metricCompare.valuesB} seriesNames={[displayA, displayB]} />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
-import type { FilterState, MetricsLongRow, RankScoreLongRow } from "../types";
+import type { FeatureMetadata, FilterState, MetricsLongRow, RankScoreLongRow } from "../types";
 import { MAIN_METRICS } from "../config";
+import { featureSearchText, methodClusterDisplayName, pipelineDisplayName } from "./formatting";
 
 export function metricMatches(metricId: string, selectedMetric: string): boolean {
   if (selectedMetric === "All metrics") return true;
@@ -7,7 +8,11 @@ export function metricMatches(metricId: string, selectedMetric: string): boolean
   return metricId === selectedMetric;
 }
 
-export function filterRankRows(rows: RankScoreLongRow[], filters: FilterState): RankScoreLongRow[] {
+export function filterRankRows(
+  rows: RankScoreLongRow[],
+  filters: FilterState,
+  featureMetadataByKey?: Record<string, FeatureMetadata>,
+): RankScoreLongRow[] {
   const search = filters.searchText.trim().toLowerCase();
   return rows.filter((row) => {
     if (!metricMatches(row.metric_id, filters.selectedMetric)) return false;
@@ -18,11 +23,22 @@ export function filterRankRows(rows: RankScoreLongRow[], filters: FilterState): 
     if (filters.selectedMethodClusters.length && !filters.selectedMethodClusters.includes(row.method_cluster)) return false;
     if (filters.selectedSeedLabels.length && !filters.selectedSeedLabels.includes(row.seed_label)) return false;
     if (!search) return true;
-    return [row.feature, row.method_cluster, row.pipeline_id, row.metric_id].some((value) => value.toLowerCase().includes(search));
+    return [
+      featureSearchText(row.feature, featureMetadataByKey),
+      row.method_cluster,
+      methodClusterDisplayName(row.method_cluster),
+      row.pipeline_id,
+      pipelineDisplayName(row.pipeline_id, featureMetadataByKey),
+      row.metric_id,
+    ].some((value) => value.toLowerCase().includes(search));
   });
 }
 
-export function filterMetricRows(rows: MetricsLongRow[], filters: FilterState): MetricsLongRow[] {
+export function filterMetricRows(
+  rows: MetricsLongRow[],
+  filters: FilterState,
+  featureMetadataByKey?: Record<string, FeatureMetadata>,
+): MetricsLongRow[] {
   const search = filters.searchText.trim().toLowerCase();
   return rows.filter((row) => {
     if (!metricMatches(row.metric_id, filters.selectedMetric)) return false;
@@ -34,8 +50,14 @@ export function filterMetricRows(rows: MetricsLongRow[], filters: FilterState): 
     if (filters.selectedClusterMethods.length && !filters.selectedClusterMethods.includes(row.cluster_method)) return false;
     if (filters.selectedMethodClusters.length && !filters.selectedMethodClusters.includes(row.method_cluster)) return false;
     if (!search) return true;
-    return [row.dataset, row.feature, row.method_cluster, row.pipeline_id, row.metric_id].some((value) =>
-      value.toLowerCase().includes(search),
-    );
+    return [
+      row.dataset,
+      featureSearchText(row.feature, featureMetadataByKey),
+      row.method_cluster,
+      methodClusterDisplayName(row.method_cluster),
+      row.pipeline_id,
+      pipelineDisplayName(row.pipeline_id, featureMetadataByKey),
+      row.metric_id,
+    ].some((value) => value.toLowerCase().includes(search));
   });
 }

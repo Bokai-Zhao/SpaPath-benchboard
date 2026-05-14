@@ -3,6 +3,7 @@ import type { DashboardData, FilterState, MetricsLongRow, RankScoreLongRow } fro
 import { DEFAULT_FILTERS } from "../config";
 import { aggregate } from "../lib/aggregation";
 import { filterMetricRows, filterRankRows } from "../lib/filters";
+import { featureDisplayName, methodClusterDisplayName } from "../lib/formatting";
 import { FilterPanel } from "../components/FilterPanel";
 import { HeatmapView, type HeatmapDatum } from "../components/HeatmapView";
 
@@ -41,13 +42,13 @@ function groupHeatmap<T>(
 
 export function HeatmapPage({ data }: { data: DashboardData }) {
   const [filters, setFilters] = useState<FilterState>({ ...DEFAULT_FILTERS, topN: 25 });
-  const rankRows = useMemo(() => filterRankRows(data.rankScores, filters), [data.rankScores, filters]);
-  const metricRows = useMemo(() => filterMetricRows(data.metricsLong, filters), [data.metricsLong, filters]);
+  const rankRows = useMemo(() => filterRankRows(data.rankScores, filters, data.featureMetadataByKey), [data.featureMetadataByKey, data.rankScores, filters]);
+  const metricRows = useMemo(() => filterMetricRows(data.metricsLong, filters, data.featureMetadataByKey), [data.featureMetadataByKey, data.metricsLong, filters]);
 
   const featureMethod = groupHeatmap<RankScoreLongRow>(
     rankRows,
-    (row) => row.method_cluster,
-    (row) => row.feature,
+    (row) => methodClusterDisplayName(row.method_cluster),
+    (row) => featureDisplayName(row.feature, data.featureMetadataByKey),
     (row) => row.global_rank_score,
     filters.aggregation,
     filters.topN,
@@ -55,7 +56,7 @@ export function HeatmapPage({ data }: { data: DashboardData }) {
   const metricFeature = groupHeatmap<RankScoreLongRow>(
     data.rankScores,
     (row) => row.metric_id,
-    (row) => row.feature,
+    (row) => featureDisplayName(row.feature, data.featureMetadataByKey),
     (row) => row.global_rank_score,
     filters.aggregation,
     filters.topN,
@@ -63,14 +64,14 @@ export function HeatmapPage({ data }: { data: DashboardData }) {
   const datasetFeature = groupHeatmap<MetricsLongRow>(
     metricRows,
     (row) => row.dataset,
-    (row) => row.feature,
+    (row) => featureDisplayName(row.feature, data.featureMetadataByKey),
     (row) => row.dataset_rank_score,
     filters.aggregation,
     filters.topN,
   );
   const datasetMethod = groupHeatmap<MetricsLongRow>(
     metricRows,
-    (row) => row.method_cluster,
+    (row) => methodClusterDisplayName(row.method_cluster),
     (row) => row.dataset,
     (row) => row.dataset_rank_score,
     filters.aggregation,
@@ -83,7 +84,7 @@ export function HeatmapPage({ data }: { data: DashboardData }) {
         <h1 className="text-2xl font-semibold text-ink">Heatmap</h1>
         <p className="mt-1 text-sm text-slate-600">Global heatmaps use global rank scores; dataset heatmaps use dataset rank scores.</p>
       </div>
-      <FilterPanel filters={filters} manifest={data.manifest} onChange={setFilters} showDatasetType showAggregation />
+      <FilterPanel filters={filters} manifest={data.manifest} featureMetadataByKey={data.featureMetadataByKey} onChange={setFilters} showDatasetType showAggregation />
       <div className="space-y-4">
         <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
           <HeatmapView title="Feature x method_cluster: global rank score" data={featureMethod} />

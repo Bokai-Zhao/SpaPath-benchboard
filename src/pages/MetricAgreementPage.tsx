@@ -2,9 +2,9 @@ import type { DashboardData, RankScoreLongRow } from "../types";
 import { aggregate } from "../lib/aggregation";
 import { HeatmapView, type HeatmapDatum } from "../components/HeatmapView";
 import { LeaderboardTable } from "../components/LeaderboardTable";
-import { formatNumber } from "../lib/formatting";
+import { featureDisplayName, formatNumber } from "../lib/formatting";
 
-function metricFeatureHeatmap(rows: RankScoreLongRow[]): HeatmapDatum[] {
+function metricFeatureHeatmap(rows: RankScoreLongRow[], featureMetadataByKey: DashboardData["featureMetadataByKey"]): HeatmapDatum[] {
   const buckets = new Map<string, Array<number | null>>();
   rows.forEach((row) => {
     const key = `${row.metric_id}\u0000${row.feature}`;
@@ -12,7 +12,7 @@ function metricFeatureHeatmap(rows: RankScoreLongRow[]): HeatmapDatum[] {
   });
   return [...buckets.entries()].map(([key, values]) => {
     const [metric, feature] = key.split("\u0000");
-    return { x: metric, y: feature, value: aggregate(values, "mean") };
+    return { x: metric, y: featureDisplayName(feature, featureMetadataByKey), value: aggregate(values, "mean") };
   });
 }
 
@@ -24,13 +24,13 @@ export function MetricAgreementPage({ data }: { data: DashboardData }) {
         <p className="mt-1 text-sm text-slate-600">Cross-metric views use normalized global rank scores, not raw metric values.</p>
       </div>
       <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
-        <HeatmapView title="Metric x feature: mean global rank score" data={metricFeatureHeatmap(data.rankScores)} />
+        <HeatmapView title="Metric x feature: mean global rank score" data={metricFeatureHeatmap(data.rankScores, data.featureMetadataByKey)} />
       </div>
       <LeaderboardTable
         rows={data.crossMetricFeature.slice(0, 30)}
         filename="cross-metric-feature.csv"
         columns={[
-          { key: "entity_id", header: "Feature" },
+          { key: "entity_id", header: "Feature", render: (row) => featureDisplayName(String(row.entity_id ?? ""), data.featureMetadataByKey) },
           { key: "overall_mean_rank_score", header: "Mean global", render: (row) => formatNumber(row.overall_mean_rank_score) },
           { key: "overall_mean_normalized_rank_score", header: "Mean normalized", render: (row) => formatNumber(row.overall_mean_normalized_rank_score) },
           { key: "metric_std", header: "Metric std", render: (row) => formatNumber(row.metric_std) },

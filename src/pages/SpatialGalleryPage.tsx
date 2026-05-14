@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { DashboardData, SpatialPoint } from "../types";
 import { loadSpatialLabels } from "../lib/loadData";
 import { hasGroundTruth } from "../lib/spatial";
-import { formatNumber } from "../lib/formatting";
+import { featureDisplayName, formatNumber } from "../lib/formatting";
 import { SpatialScatter } from "../components/SpatialScatter";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorState } from "../components/ErrorState";
@@ -76,7 +76,7 @@ export function SpatialGalleryPage({ data }: { data: DashboardData }) {
         <label className="flex flex-col gap-1 text-xs font-medium text-slate-600 lg:col-span-2">
           Feature
           <select className="rounded-md border border-line px-3 py-2 text-sm" value={feature} onChange={(event) => setFeature(event.target.value)}>
-            {features.map((name) => <option key={name}>{name}</option>)}
+            {features.map((name) => <option key={name} value={name}>{featureDisplayName(name, data.featureMetadataByKey)}</option>)}
           </select>
         </label>
         <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
@@ -125,7 +125,8 @@ export function SpatialGalleryPage({ data }: { data: DashboardData }) {
       ) : null}
 
       <section className="rounded-lg border border-line bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-sm font-semibold text-ink">Metrics for ccst + leiden</h2>
+        <h2 className="mb-1 text-sm font-semibold text-ink">Metrics for CCST + Leiden</h2>
+        <p className="mb-3 text-xs text-slate-500">Feature: {featureDisplayName(feature, data.featureMetadataByKey)}</p>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {visibleMetrics.map((row) => (
             <div key={row.metric_id} className="rounded-md border border-line bg-slate-50 p-3">

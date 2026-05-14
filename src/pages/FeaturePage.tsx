@@ -3,6 +3,7 @@ import type { DashboardData, FeatureSummary } from "../types";
 import { FeatureCard } from "../components/FeatureCard";
 import { DetailDrawer } from "../components/DetailDrawer";
 import { EmptyState } from "../components/EmptyState";
+import { featureSearchText } from "../lib/formatting";
 
 export function FeaturePage({ data }: { data: DashboardData }) {
   const [search, setSearch] = useState("");
@@ -13,10 +14,23 @@ export function FeaturePage({ data }: { data: DashboardData }) {
       data.featureSummary.filter((row) => {
         if (group === "hvg" && !row.is_hvg) return false;
         if (group === "pathology" && !row.is_pathology_feature) return false;
-        return row.feature.toLowerCase().includes(search.toLowerCase());
+        const query = search.toLowerCase().trim();
+        if (!query) return true;
+        return featureSearchText(row.feature, data.featureMetadataByKey).includes(query);
       }),
-    [data.featureSummary, group, search],
+    [data.featureMetadataByKey, data.featureSummary, group, search],
   );
+  const detailRow = detail
+    ? {
+        ...detail,
+        feature_display_name: data.featureMetadataByKey[detail.feature]?.display_name ?? detail.feature,
+        raw_feature_key: detail.feature,
+        feature_paper_name: data.featureMetadataByKey[detail.feature]?.paper_name ?? null,
+        feature_formal_name: data.featureMetadataByKey[detail.feature]?.formal_name ?? null,
+        feature_group: data.featureMetadataByKey[detail.feature]?.group ?? null,
+        feature_note: data.featureMetadataByKey[detail.feature]?.note ?? null,
+      }
+    : null;
   return (
     <div className="space-y-5">
       <div>
@@ -39,13 +53,18 @@ export function FeaturePage({ data }: { data: DashboardData }) {
       {rows.length ? (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {rows.map((feature) => (
-            <FeatureCard key={feature.feature} feature={feature} onClick={() => setDetail(feature)} />
+            <FeatureCard
+              key={feature.feature}
+              feature={feature}
+              metadata={data.featureMetadataByKey[feature.feature]}
+              onClick={() => setDetail(feature)}
+            />
           ))}
         </div>
       ) : (
         <EmptyState title="No features match the filters" />
       )}
-      <DetailDrawer title="Feature details" row={detail as Record<string, unknown> | null} onClose={() => setDetail(null)} />
+      <DetailDrawer title="Feature details" row={detailRow as Record<string, unknown> | null} featureMetadataByKey={data.featureMetadataByKey} onClose={() => setDetail(null)} />
     </div>
   );
 }

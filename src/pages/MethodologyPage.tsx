@@ -35,6 +35,7 @@ export function MethodologyPage({ data }: { data: DashboardData }) {
         with HVG-derived pseudo-reference domains, primarily for unlabeled non-DLPFC slides. GT-referenced metrics compare with
         expert anatomical labels, primarily for DLPFC slides.
       </p>
+      <p>HVG is a transcriptomic baseline/reference, not a pathology foundation model.</p>
       <div className="overflow-x-auto">
         <table>
           <thead>

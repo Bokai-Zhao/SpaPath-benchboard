@@ -23,6 +23,37 @@ export interface MetricInfo {
   main_for: Array<"all" | DatasetType>;
 }
 
+export interface FeatureMetadata {
+  feature: string;
+  display_name: string;
+  paper_name?: string;
+  formal_name?: string;
+  group?: string;
+  is_pathology_feature?: boolean;
+  note?: string;
+}
+
+export interface PaperMetadata {
+  title: string;
+  subtitle?: string;
+  paper_url?: string | null;
+  preprint_url?: string | null;
+  code_url?: string | null;
+  main_figure?: string | null;
+  citation_text?: string | null;
+  status?: "pending_publication" | "preprint" | "published" | string;
+}
+
+export interface DatasetSourceLink {
+  dataset: string;
+  display_title?: string;
+  source_name?: string;
+  source_url?: string | null;
+  source_status?: "verified" | "needs_manual_verification" | "external_non_10x" | "missing";
+  search_query?: string;
+  note?: string;
+}
+
 export interface RankScoreLongRow {
   feature: string;
   context_key: string;
@@ -199,4 +230,9 @@ export interface DashboardData {
   methodClusterSummary: MethodClusterSummary[];
   metricSummary: JsonRow[];
   spatialLabelsManifest: SpatialLabelManifestItem[];
+  featureMetadata: FeatureMetadata[];
+  featureMetadataByKey: Record<string, FeatureMetadata>;
+  paperMetadata: PaperMetadata;
+  datasetSourceLinks: DatasetSourceLink[];
+  datasetSourceLinksByKey: Record<string, DatasetSourceLink>;
 }

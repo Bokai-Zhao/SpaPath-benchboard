@@ -1,0 +1,164 @@
+[
+  {
+    "feature": "HVG",
+    "display_name": "HVG",
+    "paper_name": "HVG",
+    "formal_name": "Highly variable genes",
+    "group": "Transcriptomic baseline",
+    "is_pathology_feature": false,
+    "note": "HVG is a transcriptomic baseline/reference, not a pathology foundation model."
+  },
+  {
+    "feature": "conch_v1",
+    "display_name": "CONCH",
+    "paper_name": "CONCH",
+    "formal_name": "CONCH",
+    "group": "Vision-language pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "conch_v15",
+    "display_name": "CONCH-V1.5",
+    "paper_name": "CONCH-V1.5",
+    "formal_name": "CONCH v1.5",
+    "group": "Vision-language pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "ctranspath",
+    "display_name": "CTransPath",
+    "paper_name": "CtransPath",
+    "formal_name": "CTransPath",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true,
+    "note": "Use CTransPath for website display; paper figures may use CtransPath."
+  },
+  {
+    "feature": "gigapath",
+    "display_name": "GigaPath",
+    "paper_name": "GigaPath",
+    "formal_name": "GigaPath",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "hibou_b",
+    "display_name": "Hibou-B",
+    "paper_name": "Hibou-B",
+    "formal_name": "Hibou-B",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "hibou_l",
+    "display_name": "Hibou-L",
+    "paper_name": "Hibou-L",
+    "formal_name": "Hibou-L",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "hoptimus0",
+    "display_name": "H-Optimus-0",
+    "paper_name": "H-Optimus-0",
+    "formal_name": "H-Optimus-0",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "hoptimus1",
+    "display_name": "H-Optimus-1",
+    "paper_name": "H-Optimus-1",
+    "formal_name": "H-Optimus-1",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "musk",
+    "display_name": "MUSK",
+    "paper_name": "MUSK",
+    "formal_name": "MUSK",
+    "group": "Vision-language pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "omics_clip",
+    "display_name": "OmicsCLIP",
+    "paper_name": "OmicsCLIP",
+    "formal_name": "OmicsCLIP",
+    "group": "Vision-omics pathology model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "phikon",
+    "display_name": "Phikon",
+    "paper_name": "Phikon",
+    "formal_name": "Phikon",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "phikon_v2",
+    "display_name": "Phikon2",
+    "paper_name": "Phikon2",
+    "formal_name": "Phikon-v2",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "plip",
+    "display_name": "PLIP",
+    "paper_name": "PLIP",
+    "formal_name": "PLIP",
+    "group": "Vision-language pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "uni_v1",
+    "display_name": "UNI",
+    "paper_name": "UNI",
+    "formal_name": "UNI",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "uni_v2",
+    "display_name": "UNI2",
+    "paper_name": "UNI2",
+    "formal_name": "UNI v2",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "virchow",
+    "display_name": "Virchow",
+    "paper_name": "Virchow",
+    "formal_name": "Virchow",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "virchow2",
+    "display_name": "Virchow2",
+    "paper_name": "Virchow2",
+    "formal_name": "Virchow2",
+    "group": "Pure vision pathology foundation model",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "vit_b_dinov3",
+    "display_name": "DINOv3-ViT-B",
+    "paper_name": "DINOv3-ViT-b",
+    "formal_name": "DINOv3 ViT-B",
+    "group": "Natural-image foundation model baseline",
+    "is_pathology_feature": true
+  },
+  {
+    "feature": "vit_l_dinov3",
+    "display_name": "DINOv3-ViT-L",
+    "paper_name": "DINOv3-ViT-l",
+    "formal_name": "DINOv3 ViT-L",
+    "group": "Natural-image foundation model baseline",
+    "is_pathology_feature": true
+  }
+]

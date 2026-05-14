@@ -1,5 +1,6 @@
 import { Filter } from "lucide-react";
-import type { FilterState, Manifest } from "../types";
+import type { FeatureMetadata, FilterState, Manifest } from "../types";
+import { featureDisplayName } from "../lib/formatting";
 import { MetricSelector } from "./MetricSelector";
 
 export function FilterPanel({
@@ -8,12 +9,14 @@ export function FilterPanel({
   onChange,
   showDatasetType = false,
   showAggregation = false,
+  featureMetadataByKey,
 }: {
   filters: FilterState;
   manifest: Manifest;
   onChange: (filters: FilterState) => void;
   showDatasetType?: boolean;
   showAggregation?: boolean;
+  featureMetadataByKey?: Record<string, FeatureMetadata>;
 }) {
   return (
     <div className="mb-4 rounded-lg border border-line bg-white p-4 shadow-sm">
@@ -21,7 +24,7 @@ export function FilterPanel({
         <Filter className="h-4 w-4" />
         Filters
       </div>
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-6">
         <MetricSelector metrics={manifest.metrics} value={filters.selectedMetric} onChange={(selectedMetric) => onChange({ ...filters, selectedMetric })} />
         <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
           Reference
@@ -65,6 +68,26 @@ export function FilterPanel({
             </select>
           </label>
         ) : null}
+        <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+          Feature
+          <select
+            className="rounded-md border border-line bg-white px-3 py-2 text-sm text-ink"
+            value={filters.selectedFeatures[0] ?? "all"}
+            onChange={(event) =>
+              onChange({
+                ...filters,
+                selectedFeatures: event.target.value === "all" ? [] : [event.target.value],
+              })
+            }
+          >
+            <option value="all">all features</option>
+            {manifest.features.map((feature) => (
+              <option key={feature} value={feature}>
+                {featureDisplayName(feature, featureMetadataByKey)}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
           Top N
           <input

@@ -2,16 +2,20 @@ import Papa from "papaparse";
 import { DATA_ROOT } from "../config";
 import type {
   DashboardData,
+  DatasetSourceLink,
   DatasetSummary,
+  FeatureMetadata,
   FeatureSummary,
   JsonRow,
   Manifest,
   MethodClusterSummary,
   MetricsLongRow,
+  PaperMetadata,
   RankScoreLongRow,
   SpatialLabelManifestItem,
   SpatialPoint,
 } from "../types";
+import { DEFAULT_FEATURE_METADATA } from "./formatting";
 
 const NUMBER_FIELDS = new Set([
   "random_seed",
@@ -52,6 +56,29 @@ async function fetchJson<T>(path: string): Promise<T> {
     throw new DataLoadError(path, `Missing data file: ${path}`);
   }
   return response.json() as Promise<T>;
+}
+
+async function fetchOptionalJson<T>(path: string, fallback: T): Promise<T> {
+  try {
+    return await fetchJson<T>(path);
+  } catch {
+    return fallback;
+  }
+}
+
+const DEFAULT_PAPER_METADATA: PaperMetadata = {
+  title: "SpaPath-Bench",
+  subtitle: "Benchmarking pathology foundation models for spatial domain understanding",
+  paper_url: null,
+  preprint_url: null,
+  code_url: null,
+  main_figure: null,
+  citation_text: null,
+  status: "pending_publication",
+};
+
+function indexByKey<T extends Record<K, string>, K extends keyof T>(rows: T[], key: K): Record<string, T> {
+  return Object.fromEntries(rows.map((row) => [row[key], row]));
 }
 
 function parseValue(value: string, field: string): string | number | boolean | null {
@@ -99,6 +126,9 @@ export async function loadDashboardData(): Promise<DashboardData> {
     methodClusterSummary,
     metricSummary,
     spatialLabelsManifest,
+    featureMetadata,
+    paperMetadata,
+    datasetSourceLinks,
   ] = await Promise.all([
     fetchJson<Manifest>("manifest.json"),
     fetchCsv<RankScoreLongRow>("rank_scores_long.csv"),
@@ -115,7 +145,13 @@ export async function loadDashboardData(): Promise<DashboardData> {
     fetchJson<MethodClusterSummary[]>("method_cluster_summary.json"),
     fetchJson<JsonRow[]>("metric_summary.json"),
     fetchJson<SpatialLabelManifestItem[]>("spatial_labels_manifest.json"),
+    fetchOptionalJson<FeatureMetadata[]>("feature_metadata.json", DEFAULT_FEATURE_METADATA),
+    fetchOptionalJson<PaperMetadata>("paper_metadata.json", DEFAULT_PAPER_METADATA),
+    fetchOptionalJson<DatasetSourceLink[]>("dataset_source_links.json", []),
   ]);
+
+  const featureMetadataByKey = indexByKey(featureMetadata, "feature");
+  const datasetSourceLinksByKey = indexByKey(datasetSourceLinks, "dataset");
 
   return {
     manifest,
@@ -133,6 +169,11 @@ export async function loadDashboardData(): Promise<DashboardData> {
     methodClusterSummary,
     metricSummary,
     spatialLabelsManifest,
+    featureMetadata,
+    featureMetadataByKey,
+    paperMetadata,
+    datasetSourceLinks,
+    datasetSourceLinksByKey,
   };
 }
 
