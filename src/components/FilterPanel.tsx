@@ -1,6 +1,6 @@
 import { Filter } from "lucide-react";
 import type { FeatureMetadata, FilterState, Manifest } from "../types";
-import { featureDisplayName } from "../lib/formatting";
+import { datasetTypeDisplayName, featureDisplayName } from "../lib/formatting";
 import { MetricSelector } from "./MetricSelector";
 
 export function FilterPanel({
@@ -49,7 +49,7 @@ export function FilterPanel({
             >
               <option value="all">all</option>
               <option value="DLPFC">DLPFC</option>
-              <option value="non_DLPFC">non_DLPFC</option>
+              <option value="non_DLPFC">{datasetTypeDisplayName("non_DLPFC")}</option>
             </select>
           </label>
         ) : null}

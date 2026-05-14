@@ -3,6 +3,7 @@ import type { DashboardData, DatasetSummary } from "../types";
 import { DatasetCard } from "../components/DatasetCard";
 import { DetailDrawer } from "../components/DetailDrawer";
 import { EmptyState } from "../components/EmptyState";
+import { datasetTypeDisplayName } from "../lib/formatting";
 
 export function DatasetPage({ data }: { data: DashboardData }) {
   const [search, setSearch] = useState("");
@@ -51,7 +52,7 @@ export function DatasetPage({ data }: { data: DashboardData }) {
         <select className="rounded-md border border-line px-3 py-2 text-sm" value={datasetType} onChange={(event) => setDatasetType(event.target.value)}>
           <option value="all">all dataset types</option>
           <option value="DLPFC">DLPFC</option>
-          <option value="non_DLPFC">non_DLPFC</option>
+          <option value="non_DLPFC">{datasetTypeDisplayName("non_DLPFC")}</option>
         </select>
       </div>
       {rows.length ? (

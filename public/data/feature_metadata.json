@@ -26,12 +26,12 @@
   },
   {
     "feature": "ctranspath",
-    "display_name": "CTransPath",
+    "display_name": "CtransPath",
     "paper_name": "CtransPath",
-    "formal_name": "CTransPath",
+    "formal_name": "CtransPath",
     "group": "Pure vision pathology foundation model",
     "is_pathology_feature": true,
-    "note": "Use CTransPath for website display; paper figures may use CtransPath."
+    "note": "Display follows the manuscript spelling."
   },
   {
     "feature": "gigapath",
@@ -147,17 +147,17 @@
   },
   {
     "feature": "vit_b_dinov3",
-    "display_name": "DINOv3-ViT-B",
+    "display_name": "DINOv3-ViT-b",
     "paper_name": "DINOv3-ViT-b",
-    "formal_name": "DINOv3 ViT-B",
+    "formal_name": "DINOv3 ViT-b",
     "group": "Natural-image foundation model baseline",
     "is_pathology_feature": true
   },
   {
     "feature": "vit_l_dinov3",
-    "display_name": "DINOv3-ViT-L",
+    "display_name": "DINOv3-ViT-l",
     "paper_name": "DINOv3-ViT-l",
-    "formal_name": "DINOv3 ViT-L",
+    "formal_name": "DINOv3 ViT-l",
     "group": "Natural-image foundation model baseline",
     "is_pathology_feature": true
   }

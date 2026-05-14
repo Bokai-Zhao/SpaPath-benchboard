@@ -3,6 +3,7 @@ import type { FeatureMetadata } from "../types";
 import {
   asText,
   clusterMethodDisplayName,
+  datasetTypeDisplayName,
   featureDisplayName,
   methodClusterDisplayName,
   pipelineDisplayName,
@@ -12,23 +13,20 @@ import {
 function detailValue(key: string, value: unknown, featureMetadataByKey?: Record<string, FeatureMetadata>) {
   if (typeof value !== "string") return asText(value);
   if (key === "feature" || key === "best_feature") {
-    const display = featureDisplayName(value, featureMetadataByKey);
-    return display === value ? value : `${display} (raw: ${value})`;
+    return featureDisplayName(value, featureMetadataByKey);
   }
   if (key === "entity_id" && featureMetadataByKey?.[value]) {
-    const display = featureDisplayName(value, featureMetadataByKey);
-    return display === value ? value : `${display} (raw: ${value})`;
+    return featureDisplayName(value, featureMetadataByKey);
   }
   if (key === "pipeline_id" || key === "best_pipeline_id" || key === "entity_id") {
-    const display = pipelineDisplayName(value, featureMetadataByKey);
-    return display === value ? value : `${display} (raw: ${value})`;
+    return pipelineDisplayName(value, featureMetadataByKey);
   }
   if (key === "method_cluster" || key === "best_method_cluster") {
-    const display = methodClusterDisplayName(value);
-    return display === value ? value : `${display} (raw: ${value})`;
+    return methodClusterDisplayName(value);
   }
   if (key === "spatial_method") return spatialMethodDisplayName(value);
   if (key === "cluster_method") return clusterMethodDisplayName(value);
+  if (key === "dataset_type") return datasetTypeDisplayName(value);
   if (key === "source_url" && value !== "NA") {
     return (
       <a href={value} target="_blank" rel="noreferrer" className="text-brand underline underline-offset-2">

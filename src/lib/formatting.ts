@@ -36,10 +36,10 @@ export const FEATURE_DISPLAY_NAMES: Record<string, string> = {
   phikon: "Phikon",
   hibou_l: "Hibou-L",
   hibou_b: "Hibou-B",
-  ctranspath: "CTransPath",
+  ctranspath: "CtransPath",
   omics_clip: "OmicsCLIP",
-  vit_l_dinov3: "DINOv3-ViT-L",
-  vit_b_dinov3: "DINOv3-ViT-B",
+  vit_l_dinov3: "DINOv3-ViT-l",
+  vit_b_dinov3: "DINOv3-ViT-b",
   plip: "PLIP",
   HVG: "HVG",
 };
@@ -76,6 +76,12 @@ export function featureDisplayName(
 ): string {
   if (!feature) return "NA";
   return metadataByKey?.[feature]?.display_name ?? FEATURE_DISPLAY_NAMES[feature] ?? feature;
+}
+
+export function datasetTypeDisplayName(datasetType: string | null | undefined): string {
+  if (!datasetType) return "NA";
+  if (datasetType === "non_DLPFC") return "Other 10x";
+  return datasetType;
 }
 
 export function spatialMethodDisplayName(method: string | null | undefined): string {

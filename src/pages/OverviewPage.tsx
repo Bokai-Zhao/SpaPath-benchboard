@@ -5,7 +5,7 @@ import { SummaryCards } from "../components/SummaryCards";
 import { LeaderboardTable } from "../components/LeaderboardTable";
 import { Badge } from "../components/Badge";
 import { ManuscriptHeroCard } from "../components/ManuscriptHeroCard";
-import { featureDisplayName, formatNumber, methodClusterDisplayName, pipelineDisplayName } from "../lib/formatting";
+import { datasetTypeDisplayName, featureDisplayName, formatNumber, methodClusterDisplayName, pipelineDisplayName } from "../lib/formatting";
 import { meanSkipNaN } from "../lib/aggregation";
 
 function barOption(
@@ -110,7 +110,7 @@ export function OverviewPage({ data }: { data: DashboardData }) {
 
   const datasetTypeCounts = [
     { name: "DLPFC", value: data.datasetSummary.filter((row) => row.dataset_type === "DLPFC").length },
-    { name: "non_DLPFC", value: data.datasetSummary.filter((row) => row.dataset_type === "non_DLPFC").length },
+    { name: datasetTypeDisplayName("non_DLPFC"), value: data.datasetSummary.filter((row) => row.dataset_type === "non_DLPFC").length },
   ];
 
   return (
@@ -119,6 +119,9 @@ export function OverviewPage({ data }: { data: DashboardData }) {
         <h1 className="text-2xl font-semibold text-ink">Overview</h1>
         <p className="mt-1 text-sm text-slate-600">Global summaries use prepared rank scores; dataset panels use raw metric derivatives.</p>
       </div>
+
+      <ManuscriptHeroCard metadata={data.paperMetadata} />
+
       <SummaryCards
         cards={[
           { label: "Datasets", value: data.manifest.datasets.length },
@@ -137,7 +140,27 @@ export function OverviewPage({ data }: { data: DashboardData }) {
         ]}
       />
 
-      <ManuscriptHeroCard metadata={data.paperMetadata} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
+          <ReactECharts
+            option={barOption(
+              "Exploratory cross-metric feature aggregate",
+              data.crossMetricFeature,
+              "entity_id",
+              "overall_mean_rank_score",
+              (value) => featureDisplayName(value, data.featureMetadataByKey),
+            )}
+            style={{ height: 360 }}
+          />
+          <p className="px-2 pb-2 text-xs text-slate-500">Paper-specific winners are reported separately in the Champion Board.</p>
+        </div>
+        <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
+          <ReactECharts
+            option={pieOption("Dataset type distribution", datasetTypeCounts)}
+            style={{ height: 360 }}
+          />
+        </div>
+      </div>
 
       <section>
         <div className="mb-3 flex items-center gap-2">
@@ -161,49 +184,6 @@ export function OverviewPage({ data }: { data: DashboardData }) {
           ]}
         />
       </section>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
-          <ReactECharts
-            option={barOption(
-              "Exploratory cross-metric feature aggregate",
-              data.crossMetricFeature,
-              "entity_id",
-              "overall_mean_rank_score",
-              (value) => featureDisplayName(value, data.featureMetadataByKey),
-            )}
-            style={{ height: 360 }}
-          />
-          <p className="px-2 pb-2 text-xs text-slate-500">Paper-specific winners are reported in the Champion Board above.</p>
-        </div>
-        <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
-          <ReactECharts
-            option={barOption(
-              methodMeanTie ? "Method clusters: tied cross-feature mean" : "Exploratory method-cluster aggregate",
-              data.crossMetricMethodCluster,
-              "entity_id",
-              "overall_mean_rank_score",
-              methodClusterDisplayName,
-            )}
-            style={{ height: 360 }}
-          />
-          {methodMeanTie ? (
-            <p className="px-2 pb-2 text-xs text-slate-500">All method-cluster means are tied here; the manuscript conclusion remains CCST+Leiden.</p>
-          ) : null}
-        </div>
-        <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
-          <ReactECharts
-            option={barOption("Metric availability", data.metricSummary, "metric_id", "n_valid_global_rank_scores")}
-            style={{ height: 360 }}
-          />
-        </div>
-        <div className="rounded-lg border border-line bg-white p-2 shadow-sm">
-          <ReactECharts
-            option={pieOption("Dataset type distribution", datasetTypeCounts)}
-            style={{ height: 360 }}
-          />
-        </div>
-      </div>
     </div>
   );
 }

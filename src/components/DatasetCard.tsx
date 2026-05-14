@@ -1,5 +1,5 @@
 import type { DatasetSourceLink, DatasetSummary, FeatureMetadata } from "../types";
-import { featureDisplayName, formatNumber, methodClusterDisplayName } from "../lib/formatting";
+import { datasetTypeDisplayName, featureDisplayName, formatNumber, methodClusterDisplayName } from "../lib/formatting";
 import { Badge } from "./Badge";
 
 function sourceStatusLabel(source?: DatasetSourceLink): string {
@@ -37,7 +37,7 @@ export function DatasetCard({
           <h3 className="break-words text-sm font-semibold text-ink">{title}</h3>
           <p className="mt-0.5 break-words text-xs text-slate-500">{dataset.dataset}</p>
         </div>
-        <Badge tone={dataset.dataset_type === "DLPFC" ? "violet" : "blue"}>{dataset.dataset_type}</Badge>
+        <Badge tone={dataset.dataset_type === "DLPFC" ? "violet" : "blue"}>{datasetTypeDisplayName(dataset.dataset_type)}</Badge>
       </div>
       <div className="mb-3 flex flex-wrap gap-2">
         <Badge tone={source?.source_url ? "green" : "amber"}>{sourceStatusLabel(source)}</Badge>
