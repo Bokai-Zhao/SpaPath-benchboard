@@ -957,9 +957,9 @@ def main() -> None:
         metrics_rows_count,
         labels_rows_count,
         {
-            "rank_scores": str(args.rank_scores),
-            "metrics": str(args.metrics),
-            "labels": str(args.labels),
+            "rank_scores": args.rank_scores.name,
+            "metrics": args.metrics.name,
+            "labels": args.labels.name,
         },
     )
     log("Done")

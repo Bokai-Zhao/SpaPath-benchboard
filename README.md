@@ -2,6 +2,10 @@
 
 Interactive Vite + React + TypeScript dashboard for SpaPath-Bench results. The app is designed for GitHub Pages and reads only lightweight files under `public/data/`.
 
+Repository: https://github.com/Bokai-Zhao/SpaPath-bench.github.io
+
+Default GitHub Pages URL: https://bokai-zhao.github.io/SpaPath-bench.github.io/
+
 ## Data Contract
 
 The preprocessing script reads exactly three parquet files:
@@ -35,9 +39,9 @@ From this project directory:
 
 ```powershell
 python scripts/prepare_dashboard_data.py `
-  --rank-scores "D:\MICCIA病理学+空转聚类算法预测空间domain\results\rank_scores_merged.parquet" `
-  --metrics "D:\MICCIA病理学+空转聚类算法预测空间domain\results\pfmc_metrics_11.parquet" `
-  --labels "D:\MICCIA病理学+空转聚类算法预测空间domain\results\pfmc_all_labels.parquet" `
+  --rank-scores "data/raw/rank_scores_merged.parquet" `
+  --metrics "data/raw/pfmc_metrics_11.parquet" `
+  --labels "data/raw/pfmc_all_labels.parquet" `
   --out public\data
 ```
 
@@ -45,11 +49,13 @@ Linux/server:
 
 ```bash
 python scripts/prepare_dashboard_data.py \
-  --rank-scores /mnt/nas/zyzhang/Project/pfm-spatial-benchmark/results/rank_scores_merged.parquet \
-  --metrics /mnt/nas/zyzhang/Project/pfm-spatial-benchmark/outputs/pfmc_metrics_11.parquet \
-  --labels /mnt/nas/zyzhang/Project/pfm-spatial-benchmark/outputs/pfmc_all_labels.parquet \
+  --rank-scores data/raw/rank_scores_merged.parquet \
+  --metrics data/raw/pfmc_metrics_11.parquet \
+  --labels data/raw/pfmc_all_labels.parquet \
   --out public/data
 ```
+
+Use local or private storage for the raw parquet files and replace the example paths as needed. Do not commit machine-specific absolute paths.
 
 The script generates `manifest.json`, long CSV tables, leaderboard JSON files, summary JSON files, and split files under `public/data/spatial_labels/`.
 
@@ -77,14 +83,22 @@ The static site is emitted to `dist/`.
 
 ## Deploy to GitHub Pages
 
-Commit `public/data/` after running preprocessing, then push to `main`. The workflow at `.github/workflows/deploy.yml` installs dependencies, runs `npm run build`, and deploys `dist/` to GitHub Pages. It does not access local Windows paths or `/mnt/nas`.
+Commit `public/data/` after running preprocessing, then push to the `main` branch of `Bokai-Zhao/SpaPath-bench.github.io`. The workflow at `.github/workflows/deploy.yml` installs dependencies, runs `npm run build`, and deploys `dist/` to GitHub Pages. It does not access local machine-specific data paths.
 
-In the GitHub repository settings, open **Settings > Pages** and set **Build and deployment > Source** to **GitHub Actions**. If `https://sijimochou.github.io/` still returns an HTML file that points to `/src/main.tsx`, GitHub Pages is publishing `main/root` directly instead of the built `dist/` artifact.
-
-For a repository path that needs an explicit base, build with:
+To connect this local checkout to the target GitHub repository:
 
 ```bash
-VITE_BASE_PATH=/your-repo-name/ npm run build
+git remote set-url origin https://github.com/Bokai-Zhao/SpaPath-bench.github.io.git
+git branch -M main
+git push -u origin main
+```
+
+In the GitHub repository settings, open **Settings > Pages** and set **Build and deployment > Source** to **GitHub Actions**. If `https://bokai-zhao.github.io/SpaPath-bench.github.io/` still returns an HTML file that points to `/src/main.tsx`, GitHub Pages is publishing `main/root` directly instead of the built `dist/` artifact.
+
+For this repository path, you can also build with an explicit base:
+
+```bash
+VITE_BASE_PATH=/SpaPath-bench.github.io/ npm run build
 ```
 
 The default `base` is `./`, which works well for static GitHub Pages deployments with hash-based navigation.
@@ -107,5 +121,5 @@ Add the metric column to the upstream parquet files using either `rank_score_<me
 
 - Missing parquet: verify the three input paths passed to the preprocessing script.
 - Missing `public/data`: rerun `scripts/prepare_dashboard_data.py`.
-- GitHub Pages path issue: set `VITE_BASE_PATH=/repo-name/` before building.
+- GitHub Pages path issue: set `VITE_BASE_PATH=/SpaPath-bench.github.io/` before building.
 - Metric all NaN: affected charts and tables show empty states instead of failing.
