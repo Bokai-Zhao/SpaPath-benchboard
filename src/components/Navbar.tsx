@@ -38,7 +38,13 @@ export function Navbar({
         </nav>
         <div className="ml-auto hidden items-center gap-3 text-xs text-slate-500 md:flex">
           {generatedAt ? <span>Updated {new Date(generatedAt).toLocaleDateString()}</span> : null}
-          <a className="inline-flex items-center gap-1 hover:text-brand" href="#" aria-label="GitHub repository">
+          <a
+            className="inline-flex items-center gap-1 hover:text-brand"
+            href="https://github.com/Bokai-Zhao/SpaPath-bench"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="GitHub repository"
+          >
             <Github className="h-4 w-4" />
             GitHub
           </a>
