@@ -1,10 +1,10 @@
-# SpaPath-Bench Dashboard
+# SpaPath-BenchBoard
 
 Interactive Vite + React + TypeScript dashboard for SpaPath-Bench results. The app is designed for GitHub Pages and reads only lightweight files under `public/data/`.
 
-Repository: https://github.com/Bokai-Zhao/SpaPath-bench.github.io
+Repository: https://github.com/Bokai-Zhao/SpaPath-benchboard
 
-Default GitHub Pages URL: https://bokai-zhao.github.io/SpaPath-bench.github.io/
+Default GitHub Pages URL: https://bokai-zhao.github.io/SpaPath-benchboard/
 
 ## Data Contract
 
@@ -83,22 +83,22 @@ The static site is emitted to `dist/`.
 
 ## Deploy to GitHub Pages
 
-Commit `public/data/` after running preprocessing, then push to the `main` branch of `Bokai-Zhao/SpaPath-bench.github.io`. The workflow at `.github/workflows/deploy.yml` installs dependencies, runs `npm run build`, and deploys `dist/` to GitHub Pages. It does not access local machine-specific data paths.
+Commit `public/data/` after running preprocessing, then push to the `main` branch of `Bokai-Zhao/SpaPath-benchboard`. The workflow at `.github/workflows/deploy.yml` installs dependencies, runs `npm run build`, and deploys `dist/` to GitHub Pages. It does not access local machine-specific data paths.
 
 To connect this local checkout to the target GitHub repository:
 
 ```bash
-git remote set-url origin https://github.com/Bokai-Zhao/SpaPath-bench.github.io.git
+git remote set-url origin https://github.com/Bokai-Zhao/SpaPath-benchboard.git
 git branch -M main
 git push -u origin main
 ```
 
-In the GitHub repository settings, open **Settings > Pages** and set **Build and deployment > Source** to **GitHub Actions**. If `https://bokai-zhao.github.io/SpaPath-bench.github.io/` still returns an HTML file that points to `/src/main.tsx`, GitHub Pages is publishing `main/root` directly instead of the built `dist/` artifact.
+In the GitHub repository settings, open **Settings > Pages** and set **Build and deployment > Source** to **GitHub Actions**. If `https://bokai-zhao.github.io/SpaPath-benchboard/` still returns an HTML file that points to `/src/main.tsx`, GitHub Pages is publishing `main/root` directly instead of the built `dist/` artifact.
 
 For this repository path, you can also build with an explicit base:
 
 ```bash
-VITE_BASE_PATH=/SpaPath-bench.github.io/ npm run build
+VITE_BASE_PATH=/SpaPath-benchboard/ npm run build
 ```
 
 The default `base` is `./`, which works well for static GitHub Pages deployments with hash-based navigation.
@@ -121,5 +121,5 @@ Add the metric column to the upstream parquet files using either `rank_score_<me
 
 - Missing parquet: verify the three input paths passed to the preprocessing script.
 - Missing `public/data`: rerun `scripts/prepare_dashboard_data.py`.
-- GitHub Pages path issue: set `VITE_BASE_PATH=/SpaPath-bench.github.io/` before building.
+- GitHub Pages path issue: set `VITE_BASE_PATH=/SpaPath-benchboard/` before building.
 - Metric all NaN: affected charts and tables show empty states instead of failing.
